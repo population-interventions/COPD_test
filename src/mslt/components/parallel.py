@@ -145,7 +145,7 @@ def run_in_parallel(func, iterable, n_proc):
 
 
 
-def initialise_simulation_from_specification_config(model_specification):
+def initialise_simulation_from_specification_config(model_specification_file, model_specification):
     """
     Construct a simulation object from a model specification.
 
@@ -159,8 +159,15 @@ def initialise_simulation_from_specification_config(model_specification):
     component_config_parser = plugin_manager.get_plugin('component_configuration_parser')
     components = component_config_parser.get_components(component_config)
 
-    simulation = engine.SimulationContext(simulation_config, components,
-                                          plugin_manager)
+    print('======== simulation_config ============')
+    print(simulation_config)
+    print('========== components ==========')
+    print(components)
+    print('=========== plugin_config =========')
+    print(plugin_config)
+    print('====================')
+    simulation = engine.SimulationContext('C:/Dev/Repos/NewModels/COPD_Envelope/model_specs/run_reduce_0.01.yaml', None,
+                                          {'output_data': {'results_directory': 'C:\\Users\\wilsonte\\vivarium_results\\run_reduce_0.01\\2021_04_08_10_40_32'}}, None)
 
     return simulation
 
@@ -180,15 +187,17 @@ def run_nth_draw(model_specification_file, draw_number):
     spec = config.build_model_specification(model_specification_file)
     spec.configuration.input_data.input_draw_number = draw_number
 
-    simulation = initialise_simulation_from_specification_config(spec)
+    simulation = initialise_simulation_from_specification_config(model_specification_file, spec)
     simulation.setup()
-
-    metrics, final_state = engine.run(simulation)
+    simulation.initialize_simulants()
+    simulation.run()
+    simulation.finalize()
+    metrics = simulation.report()
     logger.info('{} Simulation for draw #{} complete'.format(
         datetime.datetime.now().strftime("%H:%M:%S"),
         draw_number))
 
-    return metrics, final_state
+    return metrics
 
 
 def run_many(spec_files, num_draws, num_procs):
@@ -210,7 +219,7 @@ def run_many(spec_files, num_draws, num_procs):
         # Run the simulations serially.
         for spec_file in spec_files:
             for draw in range(num_draws + 1):
-                metrics, final_state = run_nth_draw(spec_file, draw)
+                metrics = run_nth_draw(spec_file, draw)
         return True
     else:
         # Run the simulations in parallel.

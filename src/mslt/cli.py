@@ -28,12 +28,12 @@ def make_artifacts(scenario):
 @click.option('-s', '--spawn', default=1, metavar='NUM',
               help='The number of simulations to run in parallel')
 @click.argument('spec_file', type=click.Path(exists=True), nargs=-1)
-def run_uncertainty_analysis(draws, spawn, spec_files):
+def run_uncertainty_analysis(draws, spawn, spec_file):
     """
     Run MSLT tobacco intervention simulations for multiple value draws.
 
     You can provide any number of model specification files.
     """
     logging.basicConfig(level=logging.INFO)
-
-    run_many(spec_files, num_draws, num_procs)
+    print('=================', draws, spawn, spec_file)
+    run_many(spec_file, draws, spawn)
