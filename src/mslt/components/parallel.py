@@ -8,6 +8,7 @@ import queue
 import pickle
 import signal
 import traceback
+import os
 
 import vivarium.framework.configuration as config
 import vivarium.framework.engine as engine
@@ -145,34 +146,30 @@ def run_in_parallel(func, iterable, n_proc):
 
 
 
-def initialise_simulation_from_specification_config(model_specification_file, model_specification):
+def initialise_simulation_from_specification_config(spec_file, draw_number):
     """
     Construct a simulation object from a model specification.
 
     :param model_specification: The simulation specification (``ConfigTree``).
     """
-    plugin_config = model_specification.plugins
-    component_config = model_specification.components
-    simulation_config = model_specification.configuration
 
-    plugin_manager = plugins.PluginManager(plugin_config)
-    component_config_parser = plugin_manager.get_plugin('component_configuration_parser')
-    components = component_config_parser.get_components(component_config)
-
-    print('======== simulation_config ============')
-    print(simulation_config)
-    print('========== components ==========')
-    print(components)
-    print('=========== plugin_config =========')
-    print(plugin_config)
-    print('====================')
-    simulation = engine.SimulationContext('C:/Dev/Repos/NewModels/COPD_Envelope/model_specs/run_reduce_0.01.yaml', None,
-                                          {'output_data': {'results_directory': 'C:\\Users\\wilsonte\\vivarium_results\\run_reduce_0.01\\2021_04_08_10_40_32'}}, None)
+    simulation = engine.SimulationContext(
+        os.path.realpath(spec_file),
+        None,
+        {
+            #'output_data': {
+            #    'results_directory': 'C:\\Users\\wilsonte\\vivarium_results\\run_reduce_0.01\\2021_04_08_10_40_32'
+            #},
+            'input_data' : {
+                'input_draw_number' : draw_number
+            },
+        },
+        None)
 
     return simulation
 
 
-def run_nth_draw(model_specification_file, draw_number):
+def run_nth_draw(spec_file, draw_number):
     """
     Run a model simulation for a specific draw number.
 
@@ -183,11 +180,9 @@ def run_nth_draw(model_specification_file, draw_number):
     logger = logging.getLogger(__name__)
     logger.info('{} Simulating draw #{} for {} ...'.format(
         datetime.datetime.now().strftime("%H:%M:%S"),
-        draw_number, model_specification_file))
-    spec = config.build_model_specification(model_specification_file)
-    spec.configuration.input_data.input_draw_number = draw_number
+        draw_number, spec_file))
 
-    simulation = initialise_simulation_from_specification_config(model_specification_file, spec)
+    simulation = initialise_simulation_from_specification_config(spec_file, draw_number)
     simulation.setup()
     simulation.initialize_simulants()
     simulation.run()
