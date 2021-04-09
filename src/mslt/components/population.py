@@ -10,6 +10,14 @@ multi-state lifetable simulations.
 import numpy as np
 from datetime import date
 
+def load_population_data(builder):
+    pop_data = builder.data.load('population.structure')
+    pop_data['age'] = pop_data['age'].astype(float)
+    pop_data = pop_data[['age', 'sex', 'value']].rename(columns={'value': 'population'})
+    pop_data['population'] = pop_data['population'].astype(float)
+    pop_data['bau_population'] = pop_data['population']
+    return pop_data
+
 
 class BasePopulation:
     """
@@ -274,11 +282,3 @@ class Expenditure:
         pop.bau_expenditure = pop.bau_population * self.bau_expenditure(event.index)    
 
         self.population_view.update(pop)    
-
-
-def load_population_data(builder):
-    pop_data = builder.data.load('population.structure')
-    pop_data['age'] = pop_data['age'].astype(float)
-    pop_data = pop_data[['age', 'sex', 'value']].rename(columns={'value': 'population'})
-    pop_data['bau_population'] = pop_data['population']
-    return pop_data
