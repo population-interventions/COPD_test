@@ -58,6 +58,27 @@ class IncidenceShift:
         return rates * self.rate_mult
 
 
+class GenericWand:
+
+    def __init__(self, name):
+        self._name = name
+
+    @property
+    def name(self):
+        return self._name
+
+    def setup(self, builder):
+        self.rate_mult = 0
+        """Configuration."""
+        if 'magic_wand' in builder.configuration and self.name in builder.configuration.magic_wand:
+            configuration = builder.configuration.magic_wand[self.name]
+            self.rate_mult = (1 - configuration.rate_reduce)
+            builder.value.register_value_modifier(configuration.modify_name, self.incidence_adjustment)
+
+    def incidence_adjustment(self, index, rates):
+        return rates * self.rate_mult
+
+
 class ModifyAcuteDiseaseYLD:
 
     def __init__(self, name):

@@ -7,6 +7,7 @@ This module contains tools for recording various outputs of interest in
 multi-state lifetable simulations.
 
 """
+import numpy as np
 import pandas as pd
 import os
 
@@ -153,11 +154,11 @@ class MorbidityMortality:
 
     def write_output(self, event):
         data = pd.concat(self.tables, ignore_index=True)
-        data['year_of_birth'] = data['year'] - data['age']
+        data['year_of_birth'] = data['year'] - np.floor(data['age'])
         # Sort the table by cohort (i.e., generation and sex), and then by
         # calendar year, so that results are output in the same order as in
         # the spreadsheet models.
-        data = data.sort_values(by=['year_of_birth', 'sex', 'age'], axis=0)
+        data = data.sort_values(by=['year_of_birth', 'sex', 'age', 'year', 'month'], axis=0)
         data = data.reset_index(drop=True)
         # Re-order the table columns.
         cols = ['year_of_birth'] + self.table_cols

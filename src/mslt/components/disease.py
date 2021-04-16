@@ -60,16 +60,16 @@ class AcuteDisease:
         yld_rate = builder.lookup.build_table(yld_data,
                                               key_columns=['sex'], 
                                               parameter_columns=['age','year'])
-        self.excess_mortality = builder.value.register_rate_producer(
+        self.excess_mortality = builder.value.register_value_producer(
             f'{self.name}.excess_mortality',
             source=mty_rate)
-        self.int_excess_mortality = builder.value.register_rate_producer(
+        self.int_excess_mortality = builder.value.register_value_producer(
             f'{self.name}_intervention.excess_mortality',
             source=mty_rate)
-        self.disability_rate = builder.value.register_rate_producer(
+        self.disability_rate = builder.value.register_value_producer(
             f'{self.name}.yld_rate',
             source=yld_rate)
-        self.int_disability_rate = builder.value.register_rate_producer(
+        self.int_disability_rate = builder.value.register_value_producer(
             f'{self.name}_intervention.yld_rate',
             source=yld_rate)
         builder.value.register_value_modifier('mortality_rate', self.mortality_adjustment)
@@ -125,6 +125,7 @@ class AcuteDisease:
         scenario, to account for any change in prevalence (relative to the BAU
         scenario).
         """
+        
         pop = self.population_view.get(index)
         # person_years is already for this month, so no multiplier is required.
         if self.no_bau:
@@ -184,30 +185,30 @@ class Disease:
         i = builder.lookup.build_table(inc_data, 
                                        key_columns=['sex'], 
                                        parameter_columns=['age','year'])
-        self.incidence = builder.value.register_rate_producer(
+        self.incidence = builder.value.register_value_producer(
             bau_prefix + 'incidence', source=i)
-        self.incidence_intervention = builder.value.register_rate_producer(
+        self.incidence_intervention = builder.value.register_value_producer(
             int_prefix + 'incidence', source=i)
 
         rem_data = builder.data.load(data_prefix + 'remission')
         r = builder.lookup.build_table(rem_data, 
                                        key_columns=['sex'], 
                                        parameter_columns=['age','year'])
-        self.remission = builder.value.register_rate_producer(
+        self.remission = builder.value.register_value_producer(
             bau_prefix + 'remission', source=r)
 
         mty_data = builder.data.load(data_prefix + 'mortality')
         f = builder.lookup.build_table(mty_data, 
                                        key_columns=['sex'], 
                                        parameter_columns=['age','year'])
-        self.excess_mortality = builder.value.register_rate_producer(
+        self.excess_mortality = builder.value.register_value_producer(
             bau_prefix + 'excess_mortality', source=f)
 
         yld_data = builder.data.load(data_prefix + 'morbidity')
         yld_rate = builder.lookup.build_table(yld_data, 
                                               key_columns=['sex'], 
                                               parameter_columns=['age','year'])
-        self.disability_rate = builder.value.register_rate_producer(
+        self.disability_rate = builder.value.register_value_producer(
             bau_prefix + 'yld_rate', source=yld_rate)
 
         prev_data = builder.data.load(data_prefix + 'prevalence')

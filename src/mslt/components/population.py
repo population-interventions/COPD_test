@@ -117,12 +117,12 @@ class Mortality:
     def setup(self, builder):
         """Load the all-cause mortality rate."""
         mortality_data = builder.data.load('cause.all_causes.mortality')
-        self.mortality_rate = builder.value.register_rate_producer(
+        self.mortality_rate = builder.value.register_value_producer(
             'mortality_rate', source=builder.lookup.build_table(mortality_data, 
                                                                 key_columns=['sex'], 
                                                                 parameter_columns=['age','year']))
 
-        self.bau_mortality_rate = builder.value.register_rate_producer(
+        self.bau_mortality_rate = builder.value.register_value_producer(
             'bau_mortality_rate', source=builder.lookup.build_table(mortality_data, 
                                                                     key_columns=['sex'], 
                                                                     parameter_columns=['age','year']))
@@ -145,19 +145,18 @@ class Mortality:
         if pop.empty:
             return
         pop.acmr = self.mortality_rate(event.index)
-        probability_of_death = 1 - np.exp(-pop.acmr)
-        deaths = pop.population * probability_of_death
-        pop.population *= 1 - probability_of_death
-        pop.bau_acmr = self.bau_mortality_rate(event.index)
-        bau_probability_of_death = 1 - np.exp(-pop.bau_acmr)
-        bau_deaths = pop.bau_population * bau_probability_of_death
-        pop.bau_population *= 1 - bau_probability_of_death
-        pop.pr_death = probability_of_death
-        pop.bau_pr_death = bau_probability_of_death
-        pop.deaths = deaths
-        pop.bau_deaths = bau_deaths
+        print(pop.acmr)
+        pop.pr_death = 1 - np.exp(-pop.acmr * self.years_per_timestep)
+        pop.deaths = pop.population * pop.pr_death
+        pop.population *= 1 - pop.pr_death
         pop.person_years = (pop.population + 0.5 * pop.deaths) * self.years_per_timestep
+
+        pop.bau_acmr = self.bau_mortality_rate(event.index)
+        pop.bau_pr_death = 1 - np.exp(-pop.bau_acmr * self.years_per_timestep)
+        pop.bau_deaths = pop.bau_population * pop.bau_pr_death
+        pop.bau_population *= 1 - pop.bau_pr_death
         pop.bau_person_years = (pop.bau_population + 0.5 * pop.bau_deaths) * self.years_per_timestep
+
         self.population_view.update(pop)
 
 
@@ -214,8 +213,8 @@ class Disability:
         yld_rate = builder.lookup.build_table(yld_data, 
                                               key_columns=['sex'], 
                                               parameter_columns=['age','year'])
-        self.yld_rate = builder.value.register_rate_producer('yld_rate', source=yld_rate)
-        self.bau_yld_rate = builder.value.register_rate_producer('bau_yld_rate', source=yld_rate)
+        self.yld_rate = builder.value.register_value_producer('yld_rate', source=yld_rate)
+        self.bau_yld_rate = builder.value.register_value_producer('bau_yld_rate', source=yld_rate)
 
         self.years_per_timestep = builder.configuration.time.step_size/365
         builder.event.register_listener('time_step', self.on_time_step)
@@ -236,8 +235,8 @@ class Disability:
         pop.yld_rate = self.yld_rate(event.index)
         pop.bau_yld_rate = self.bau_yld_rate(event.index)
         # Rescale yld_rate to per year, person_years is already person years per timestep.
-        pop.HALY = pop.person_years * (1 - pop.yld_rate / self.years_per_timestep)
-        pop.bau_HALY = pop.bau_person_years * (1 - pop.bau_yld_rate / self.years_per_timestep)
+        pop.HALY = pop.person_years * (1 - pop.yld_rate)
+        pop.bau_HALY = pop.bau_person_years * (1 - pop.bau_yld_rate)
         self.population_view.update(pop)
 
 
@@ -260,8 +259,8 @@ class Expenditure:
                                                key_columns=['sex'], 
                                                parameter_columns=['age','year'])
 
-        self.expenditure = builder.value.register_rate_producer('health_costs', source=exp_table)
-        self.bau_expenditure = builder.value.register_rate_producer('bau_health_costs', source=exp_table)
+        self.expenditure = builder.value.register_value_producer('health_costs', source=exp_table)
+        self.bau_expenditure = builder.value.register_value_producer('bau_health_costs', source=exp_table)
 
         builder.event.register_listener('time_step', self.on_time_step)
 

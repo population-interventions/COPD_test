@@ -1,0 +1,50 @@
+components:
+    mslt:
+        components:
+            population:
+                - BasePopulation()
+                - Mortality()
+                - Disability()
+            disease:
+                - AcuteDisease('roadinjury')
+                - Disease('COPD')
+            magic_wand_components:
+                - IncidenceShift('COPD_intervention')
+                - GenericWand('roadinjury_intervention')
+                - GenericWand('roadinjury_intervention2')
+            observer:
+                - MorbidityMortality()
+
+configuration:
+    input_data:
+        artifact_path: C:\Dev\Repos\NewModels\COPD_Envelope\artifacts\pmslt_artifact.hdf
+        input_draw_number: 0
+        location: ''
+    interpolation:
+        validate: False
+    population:
+        # The population size here is the number of cohorts.
+        # There are 22 age bins (0-4, 5-9, ..., 105-109) for females and for
+        # males, making a total of 44 cohorts.
+        population_size: 44
+    time:
+        start:
+            year: 2021
+            month: 1
+            day: 10
+        end:
+            year: 2031
+            month: 1
+            day: 10
+        step_size: 30.4375 # In days
+    magic_wand:
+        COPD_intervention:
+            rate_reduce: 0
+        roadinjury_intervention:
+            modify_name: 'roadinjury_intervention.excess_mortality'
+            rate_reduce: 0.1
+        #roadinjury_intervention2:
+        #    modify_name: 'roadinjury_intervention.yld_rate'
+        #    rate_reduce: 0.2
+    observer:
+        output_prefix: results/test_monthly_12
